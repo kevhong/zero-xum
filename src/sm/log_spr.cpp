@@ -13,6 +13,9 @@
 #include "log_spr.h"
 #include "logrec.h"
 
+//khong
+#include "stopwatch.h"
+
 page_evict_log::page_evict_log (const btree_page_h& p,
                                 general_recordid_t child_slot, lsn_t child_lsn) {
     new (data_ssx()) page_evict_t(child_lsn, child_slot);
@@ -66,6 +69,9 @@ rc_t restart_m::recover_single_page(fixable_page_h &p, const lsn_t& emlsn)
 
     // First, retrieve the backup page we will be based on.
     // If this backup is enough recent, we have to apply only a few logs.
+   
+    stopwatch_t timer;
+
     w_assert1(p.is_fixed());
     PageID pid = p.pid();
     DBGOUT1(<< "Single-Page-Recovery on " << pid << ", EMLSN=" << emlsn);
@@ -91,6 +97,10 @@ rc_t restart_m::recover_single_page(fixable_page_h &p, const lsn_t& emlsn)
 
     w_assert0(p.lsn() == emlsn);
     DBGOUT1(<< "Single-Page-Recovery done for page " << p.pid());
+    
+    //khong
+    ADD_TSTAT(single_page_time, timer.time_us());
+    ADD_TSTAT(single_page_count, 1);
     return RCOK;
 }
 

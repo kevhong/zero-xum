@@ -362,5 +362,10 @@ SM Storage manager = 0x00060000 sm_stats_t {
     u_long backup_not_prefetched    How often a segment was fixed without being prefetched first
     u_long backup_evict_segment     A buffered segment had to be evicted in the brackup prefetcher
     u_long backup_eviction_stuck    Backup prefetcher could not find a segment to evict
+
+    // khong for recovery single page stats
+    u_long single_page_time          Time spent by recovering single pages
+    u_long single_page_count	     Number of single pages recovered
+
 };
 
