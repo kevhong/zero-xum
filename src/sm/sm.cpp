@@ -239,9 +239,9 @@ ss_m::_construct_once()
      *  Reset flags
      */
     shutting_down = false;
-    shutdown_clean = _options.get_bool_option("sm_shutdown_clean", false);
+    shutdown_clean = false;
     if (_options.get_bool_option("sm_format", false)) {
-        shutdown_clean = true;
+        shutdown_clean = false;
     }
 
     //xum:20160414
