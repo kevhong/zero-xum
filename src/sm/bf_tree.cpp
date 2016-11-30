@@ -174,7 +174,7 @@ bf_tree_m::bf_tree_m(const sm_options& options)
 
     //xum: hot page file
     bool preload = options.get_bool_option("sm_bufferpool_preload", false);
-    threshold = options.get_int_option("sm_bufferpool_preload_threshold",800);
+    threshold = options.get_int_option("sm_bufferpool_preload_threshold",10);
     if (preload)
 	hp_file.open("hot_pages.dump", std::ofstream::out | std::ofstream::binary);
 }
