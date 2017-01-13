@@ -313,6 +313,9 @@ void Command::setupSMOptions(po::options_description& options)
 	"Enable/Disable bufferpool preloading")
     ("sm_bufferpool_preload_threshold", po::value<int>(),
 	"");
+	 //khong
+   ("sm_restart_single_page_log", po::value<bool>()->default_value(false),
+	  "log the single page");
     options.add(smoptions);
 }
 

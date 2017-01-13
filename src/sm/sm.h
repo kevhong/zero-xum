@@ -407,6 +407,12 @@ class verify_volume_result;
 class lil_global_table;
 struct okvl_mode;
 
+
+//khong
+//bool khong_single_page_log;
+
+//ofstream khong_single_page_log_file;
+
 class key_ranges_map;
 /**\addtogroup SSMSP
  * A transaction may perform a partial rollback using savepoints.

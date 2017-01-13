@@ -82,7 +82,6 @@ Rome Research Laboratory Contract No. F30602-97-2-0247.
 #include "log_core.h"
 #include "eventlog.h"
 
-
 bool         smlevel_0::shutdown_clean = false;
 bool         smlevel_0::shutting_down = false;
 
@@ -350,6 +349,12 @@ ss_m::_construct_once()
     do_prefetch = _options.get_bool_option("sm_prefetch", false);
 
     ERROUT(<< "[" << timer.time_ms() << "] Performing offline recovery");
+
+    //khong_single_page_log = _options.get_bool_option("sm_restart_single_page_log", true);
+    
+    //if (khong_single_page_log) {
+      //khong_single_page_log_file.open("single_page.dump", std::ofstream::out | std::ofstream::binary);
+    //}
 
     // If not using instant restart, perform log-based REDO before opening up
     if (instantRestart) {

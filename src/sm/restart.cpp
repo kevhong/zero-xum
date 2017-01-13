@@ -74,6 +74,7 @@ Rome Research Laboratory Contract No. F30602-97-2-0247.
 #include <unistd.h>
 #include <sstream>
 
+
 restart_m::restart_m(const sm_options& options)
     : _restart_thread(NULL)
 {
@@ -556,8 +557,12 @@ void restart_thread_t::run()
 {
     // CS TODO: add mechanism to interrupt restart thread and terminate
     // before recovery is complete
+    
     smlevel_0::recovery->redo_page_pass();
     smlevel_0::recovery->undo_pass();
     smlevel_0::log->discard_fetch_buffers();
+    
+    //if (khong_single_page_log_file.is_open())
+     //khong_single_page_log_file.flush();
 };
 

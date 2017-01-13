@@ -15,6 +15,14 @@
 
 //khong
 #include "stopwatch.h"
+#include <ostream>
+
+#include <mutex>
+std::mutex mtx;
+
+ofstream khong_single_page_log_file;
+
+int test = 0;
 
 page_evict_log::page_evict_log (const btree_page_h& p,
                                 general_recordid_t child_slot, lsn_t child_lsn) {
@@ -99,8 +107,19 @@ rc_t restart_m::recover_single_page(fixable_page_h &p, const lsn_t& emlsn)
     DBGOUT1(<< "Single-Page-Recovery done for page " << p.pid());
     
     //khong
-    ADD_TSTAT(single_page_time, timer.time_us());
+    long long curr = timer.time_us();
+    ADD_TSTAT(single_page_time, curr);
     ADD_TSTAT(single_page_count, 1);
+    
+    if (!khong_single_page_log_file.is_open()) 
+        khong_single_page_log_file.open("single_page.dump",std::ofstream::out | std::ofstream::binary);
+   
+    mtx.lock();
+    khong_single_page_log_file<<test<<" "<<curr<<" "<<p.has_children()<<" \n";
+    test+=1;
+    khong_single_page_log_file.flush();
+    mtx.unlock();
+    
     return RCOK;
 }
 
