@@ -16,6 +16,7 @@
 //khong
 #include "stopwatch.h"
 #include <ostream>
+#include "xct.h"
 
 #include <mutex>
 std::mutex mtx;
@@ -115,7 +116,9 @@ rc_t restart_m::recover_single_page(fixable_page_h &p, const lsn_t& emlsn)
         khong_single_page_log_file.open("single_page.dump",std::ofstream::out | std::ofstream::binary);
    
     mtx.lock();
-    khong_single_page_log_file<<test<<" "<<curr<<" "<<p.has_children()<<" \n";
+    xct_t* curr_xct = xct();
+    if (curr_xct != NULL && curr_xct->_core != NULL)
+      khong_single_page_log_file<<test<<" "<<curr_xct->_core->_tid<<" "<<p.has_children()<<" "<<curr<<" \n";
     test+=1;
     khong_single_page_log_file.flush();
     mtx.unlock();
