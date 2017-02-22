@@ -18,6 +18,7 @@
 #include "vec_t.h"
 #include "vol.h"
 
+
 void btree_m::construct_once()
 {
     ::memset(btree_impl::s_ex_need_counts, 0, sizeof(btree_impl::s_ex_need_counts));

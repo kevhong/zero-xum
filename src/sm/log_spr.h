@@ -106,4 +106,9 @@ struct page_evict_t {
     page_evict_t(const lsn_t &child_lsn, general_recordid_t child_slot)
         : _child_lsn (child_lsn), _child_slot(child_slot) {}
 };
+
+void log_fix_kevin (fixable_page_h& p);
+
+void log_fix_pid (PageID pid);
+
 #endif // SM_LOG_SPR_H

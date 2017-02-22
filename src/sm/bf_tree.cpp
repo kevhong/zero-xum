@@ -35,6 +35,8 @@
 
 #include "restart.h"
 
+#include "log_spr.h"
+
 // Template definitions
 #include "bf_hashtable.cpp"
 
@@ -330,7 +332,7 @@ w_rc_t bf_tree_m::fix(generic_page* parent, generic_page*& page,
                     parent_h.fix_nonbufferpool_page(parent);
                     emlsn = parent_h.get_emlsn_general(recordid);
                 }
-
+		
                 w_rc_t read_rc = smlevel_0::vol->read_page_verify(pid, page, emlsn);
                 if (read_rc.is_error())
                 {
@@ -345,11 +347,14 @@ w_rc_t bf_tree_m::fix(generic_page* parent, generic_page*& page,
 
             w_assert1(_is_active_idx(idx));
 
+            
             // STEP 6) Fix successful -- pin page and downgrade latch
             cb.pin();
             w_assert1(cb.latch().is_mine());
             w_assert1(cb._pin_cnt > 0);
             DBG(<< "Fixed page " << pid << " (miss) to frame " << idx);
+
+	    log_fix_pid(pid);            
 
             if (mode != LATCH_EX) {
                 w_assert1(mode == LATCH_SH);
@@ -406,7 +411,7 @@ w_rc_t bf_tree_m::fix(generic_page* parent, generic_page*& page,
             w_assert1(_is_active_idx(parent - _buffer));
             w_assert1(latch_mode(parent) != LATCH_NL);
             fixable_page_h p;
-            p.fix_nonbufferpool_page(parent);
+	     p.fix_nonbufferpool_page(parent);
             general_recordid_t slot = find_page_id_slot (parent, pid);
 
             if (!is_swizzled(parent)) { return RCOK; }

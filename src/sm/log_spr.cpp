@@ -13,6 +13,9 @@
 #include "log_spr.h"
 #include "logrec.h"
 
+#include "generic_page.h"
+#include "fixable_page_h.h"
+
 #include "stopwatch.h"
 #include <ostream>
 #include "xct.h"
@@ -21,6 +24,64 @@
 std::mutex mtx;
 
 ofstream khong_single_page_log_file;
+
+//ofstream khong_page_access_file;
+
+ofstream khong_page_fix_pid_file;
+
+ofstream khong_page_fix_file;
+
+std::mutex mtx_fix_file;
+
+std::mutex mtx_fix_pid_file;
+
+//std::mutex mtx_access_file;
+
+void log_fix_kevin (fixable_page_h& p) {
+ 
+     if (!khong_page_fix_file.is_open())
+       khong_page_fix_file.open("page_fix_info.txt",std::ofstream::out | std::ofstream::binary);
+     
+     mtx_fix_file.lock();
+    
+     xct_t* curr_xct = xct();
+     if (curr_xct != NULL && curr_xct->_core != NULL) {
+       khong_page_fix_file<<curr_xct->_core->_tid<<","<<curr_xct->_core->_state
+			  <<p.pid()<<","<<p.store()<<","<<p.lsn()<<","<<p.tag()<<","<<p.has_children()
+			  <<"\n";
+     }
+     else {
+       khong_page_fix_file<<"NoTID"<<","
+			  <<p.pid()<<","<<p.store()<<","<<p.lsn()<<","<<p.tag()<<","<<p.has_children()
+			  <<"\n";
+     }
+
+     khong_page_fix_file.flush();
+     mtx_fix_file.unlock();
+
+}
+
+void log_fix_pid (PageID pid) {
+
+  if (!khong_page_fix_pid_file.is_open())
+    khong_page_fix_pid_file.open("page_fix_pid_info.txt",std::ofstream::out | std::ofstream::binary);
+
+  mtx_fix_pid_file.lock();
+
+  xct_t* curr_xct = xct();
+  if (curr_xct != NULL && curr_xct->_core != NULL) {
+    khong_page_fix_pid_file<<curr_xct->_core->_tid<<","<<curr_xct->_core->_state<<","<<pid<<"\n";
+  }
+  else {
+    khong_page_fix_pid_file<<"NoTID"<<","<<pid<<"\n";
+  }
+
+  khong_page_fix_pid_file.flush();
+  mtx_fix_pid_file.unlock();
+
+}
+
+
 
 page_evict_log::page_evict_log (const btree_page_h& p,
                                 general_recordid_t child_slot, lsn_t child_lsn) {

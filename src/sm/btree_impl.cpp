@@ -21,6 +21,7 @@
 #include <vector>
 #include "restart.h"
 
+#include "log_spr.h"
 
 rc_t
 btree_impl::_ux_insert(
@@ -52,6 +53,9 @@ btree_impl::_ux_insert_core(
     w_assert1( leaf.is_leaf());
     w_assert1( leaf.latch_mode() == LATCH_EX);
     w_assert1( leaf.store() == store);
+
+    
+    //log_info_kevin (leaf, "WRITE_ux_insert_core");
 
     bool need_lock = g_xct_does_need_lock();
 
