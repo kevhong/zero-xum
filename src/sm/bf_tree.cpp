@@ -239,7 +239,9 @@ w_rc_t bf_tree_m::fix(generic_page* parent, generic_page*& page,
 {
     if (is_swizzled_pointer(pid)) {
         w_assert1(!virgin_page);
-
+        
+        log_fix_pid(pid);
+        
         bf_idx idx = pid ^ SWIZZLED_PID_BIT;
         w_assert1(_is_valid_idx(idx));
         bf_tree_cb_t &cb = get_cb(idx);
@@ -825,6 +827,7 @@ w_rc_t bf_tree_m::refix_direct (generic_page*& page, bf_idx
     if (mode == LATCH_EX) { ++cb._ref_count_ex; }
     page = &(_buffer[idx]);
     //xum
+    log_fix_pid(cb._pid);
     if (cb._ref_count -1 < threshold && cb._ref_count >= threshold) {
 	// New hot page
 	if (hp_file.is_open()) {
