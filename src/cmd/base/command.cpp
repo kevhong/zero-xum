@@ -326,7 +326,9 @@ void Command::setupSMOptions(po::options_description& options)
     ("sm_logport", po::value<string>()->default_value("5556"),
         "Port of publisher for log replication")
     ("sm_bufferpool_preload", po::value<bool>(),
-	"Enable/Disable bufferpool preloading");
+	"Enable/Disable bufferpool preloading")
+    ("sm_bufferpool_preload_threshold", po::value<int>()->default_value(100),
+     "preload threshold")
     ("sm_archdir", po::value<string>()->default_value("archive"),
         "Path to archive directory");
     options.add(smoptions);
