@@ -82,6 +82,7 @@ Rome Research Laboratory Contract No. F30602-97-2-0247.
 #include "log_core.h"
 #include "eventlog.h"
 
+#include <ostream>
 
 bool         smlevel_0::shutdown_clean = false;
 bool         smlevel_0::shutting_down = false;
@@ -222,6 +223,15 @@ ss_m::_construct_once()
 {
     stopwatch_t timer;
 
+    stopwatch_t timer_khong;
+
+    ofstream khong_start_up_info;
+
+    khong_start_up_info.open("start_up_info.txt", 
+			     std::ofstream::out | std::ofstream::binary);
+
+    khong_start_up_info<<"Starting SM Construction: "<<timer_khong.now()<< endl;
+
     smthread_t::init_fingerprint_map();
 
     if (_instance_cnt++)  {
@@ -250,12 +260,17 @@ ss_m::_construct_once()
     }
     */
 
+    khong_start_up_info<<"SM Lock Manger Starting: "<<timer_khong.now()<< endl;
+
+
     ERROUT(<< "[" << timer.time_ms() << "] Initializing lock manager");
 
     lm = new lock_m(_options);
     if (! lm)  {
         W_FATAL(eOUTOFMEMORY);
     }
+
+    khong_start_up_info<<"SM Log Manager Starting: "<<timer_khong.now()<< endl;
 
     ERROUT(<< "[" << timer.time_ms() << "] Initializing log manager (part 1)");
 
@@ -316,6 +331,9 @@ ss_m::_construct_once()
     W_COERCE(bf->init(_options));
     */
 
+    khong_start_up_info<<"Starting Log Archiever: "<<timer_khong.now()<< endl;
+
+
     ERROUT(<< "[" << timer.time_ms() << "] Initializing log archiver");
 
     //xum: 20160414
@@ -334,12 +352,17 @@ ss_m::_construct_once()
         logArchiver->fork();
     }
 
+    khong_start_up_info<<"Starting Restart Manager: "<<timer_khong.now()<< endl;
+
     ERROUT(<< "[" << timer.time_ms() << "] Initializing restart manager");
 
     // Log analysis provides info required to initialize vol_t
     recovery = new restart_m(_options);
+    khong_start_up_info<<"Log Analysis Starting: "<<timer_khong.now()<< endl;
     recovery->log_analysis();
+    khong_start_up_info<<"Log Analysis Done, Getting Checkpoint: "<<timer_khong.now()<< endl;
     chkpt_t* chkpt_info = recovery->get_chkpt();
+    khong_start_up_info<<"Checkpoint Set: "<<timer_khong.now()<< endl;
 
     //xum:20160414
     /*
@@ -385,6 +408,8 @@ void ss_m::_finish_recovery()
 */
     bool instantRestart = _options.get_bool_option("sm_restart_instant", true);
     bool format = _options.get_bool_option("sm_format", false);
+  
+    khong_start_up_info<<"Starting Volumne Manager: "<<timer_khong.now()<< endl;
 
     ERROUT(<< "[" << timer.time_ms() << "] Initializing volume manager");
 
@@ -393,12 +418,16 @@ void ss_m::_finish_recovery()
     vol = new vol_t(_options,
             instantRestart ? chkpt_info : NULL);
 
+    khong_start_up_info<<"Starting Buffer Manager: "<<timer_khong.now()<< endl;
+
     ERROUT(<< "[" << timer.time_ms() << "] Initializing buffer manager");
 
     bf = new bf_tree_m(_options);
     if (! bf) {
         W_FATAL(eOUTOFMEMORY);
     }
+
+    khong_start_up_info<<"Starting Volumne Manager: "<<timer_khong.now()<< endl;
 
     ERROUT(<< "[" << timer.time_ms() << "] Building volume manager caches");
 
@@ -414,6 +443,8 @@ void ss_m::_finish_recovery()
     }
 
     smlevel_0::statistics_enabled = _options.get_bool_option("sm_statistics", true);
+
+    khong_start_up_info<<"Starting Buffer Cleaner: "<<timer_khong.now()<< endl;
 
     ERROUT(<< "[" << timer.time_ms() << "] Initializing buffer cleaner and other services");
 
@@ -435,6 +466,8 @@ void ss_m::_finish_recovery()
     do_prefetch = _options.get_bool_option("sm_prefetch", false);
 
     ERROUT(<< "[" << timer.time_ms() << "] Performing offline recovery");
+
+    khong_start_up_info<<"Starting IR or Log Based: "<<timer_khong.now()<< endl;
 
     // If not using instant restart, perform log-based REDO before opening up
     if (instantRestart) {
@@ -465,7 +498,8 @@ void ss_m::_finish_recovery()
         //     w_assert0(consistent);
         // }
     }
-
+    khong_start_up_info<<"SM Built: "<<timer_khong.now()<< endl;
+    khong_start_up_info.flush();
     ERROUT(<< "[" << timer.time_ms() << "] Finished SM initialization");
 }
 
