@@ -237,10 +237,11 @@ w_rc_t bf_tree_m::fix(generic_page* parent, generic_page*& page,
                                    bool conditional, bool virgin_page, bool only_if_hit,
                                    lsn_t emlsn)
 {
+  
+    log_fix_pid(pid);
+
     if (is_swizzled_pointer(pid)) {
         w_assert1(!virgin_page);
-        
-        log_fix_pid(pid);
         
         bf_idx idx = pid ^ SWIZZLED_PID_BIT;
         w_assert1(_is_valid_idx(idx));
@@ -892,6 +893,9 @@ w_rc_t bf_tree_m::fix_root (generic_page*& page, StoreID store,
     w_assert1(get_cb(idx)._pin_cnt > 0);
     w_assert1(get_cb(idx).latch().held_by_me());
     DBG(<< "Fixed root " << idx << " pin cnt " << get_cb(idx)._pin_cnt);
+
+    log_fix_pid(page->pid);
+
     return RCOK;
 }
 
