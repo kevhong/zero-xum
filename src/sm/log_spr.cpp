@@ -23,6 +23,7 @@
 #include <mutex>
 #include <set>
 
+
 std::mutex mtx;
 
 ofstream khong_single_page_log_file;
