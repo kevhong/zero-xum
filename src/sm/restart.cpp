@@ -403,12 +403,12 @@ void restart_m::redo_page_pass()
         smlevel_0::bf->unfix(page);
 
         iter++;
-	khong_recovery_log_file.flush();
+	//khong_recovery_log_file.flush();
 	count+=1;
     }
 
     khong_recovery_log_file<<count<<"\n";
-    khong_recovery_log_file.flush();
+    khong_recovery_log_file.close();
 
     ADD_TSTAT(restart_redo_time, timer.time_us());
     ERROUT(<< "Finished concurrent REDO of " << chkpt.buf_tab.size() << " pages");
