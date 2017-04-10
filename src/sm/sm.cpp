@@ -84,6 +84,8 @@ Rome Research Laboratory Contract No. F30602-97-2-0247.
 
 #include <ostream>
 
+#include "log_spr.h"
+
 bool         smlevel_0::shutdown_clean = false;
 bool         smlevel_0::shutting_down = false;
 
@@ -181,6 +183,8 @@ bool ss_m::startup()
         //          'generate_new_lvid', 'and create_vol' if caller would like to use
         //          new devics and volumes for operations in the new run.
 
+        start_loggers();
+
         _construct_once();
         return true;
     }
@@ -210,9 +214,10 @@ bool ss_m::shutdown()
         // Dirty shutdown (false == shutdown_clean) - destroy all active in-flight
         //                            transactions without aborting, then destroy all the managers
         //                            and free memory.  No flush and no checkpoint
-
+        
         _destruct_once();
-        return true;
+        close_loggers();
+	return true;
     }
     // If the store is not running currently, no-op
     return true;

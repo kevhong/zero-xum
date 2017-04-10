@@ -21,6 +21,8 @@
 #include "xct.h"
   
 #include <mutex>
+#include <set>
+
 std::mutex mtx;
 
 ofstream khong_single_page_log_file;
@@ -37,34 +39,45 @@ std::mutex mtx_fix_pid_file;
 
 //std::mutex mtx_access_file;
 
-void log_fix_kevin (fixable_page_h& p) {
- 
-     if (!khong_page_fix_file.is_open())
-       khong_page_fix_file.open("page_fix_info.txt",std::ofstream::out | std::ofstream::binary);
-     
-     mtx_fix_file.lock();
-    
-     xct_t* curr_xct = xct();
-     if (curr_xct != NULL && curr_xct->_core != NULL) {
-       khong_page_fix_file<<curr_xct->_core->_tid<<","<<curr_xct->_core->_state
-			  <<p.pid()<<","<<p.store()<<","<<p.lsn()<<","<<p.tag()<<","<<p.has_children()
-			  <<"\n";
-     }
-     else {
-       khong_page_fix_file<<"NoTID"<<","
-			  <<p.pid()<<","<<p.store()<<","<<p.lsn()<<","<<p.tag()<<","<<p.has_children()
-			  <<"\n";
-     }
+std::set<int> logged_pages;
 
-     khong_page_fix_file.flush();
-     mtx_fix_file.unlock();
+void start_loggers() {
+
+  if (!khong_page_fix_file.is_open())
+    khong_page_fix_file.open("page_info.txt",std::ofstream::out | std::ofstream::binary);
+
+  if (!khong_page_fix_pid_file.is_open())
+    khong_page_fix_pid_file.open("page_fix_info.txt",std::ofstream::out | std::ofstream::binary);
+
+  if (!khong_single_page_log_file.is_open())
+    khong_single_page_log_file.open("single_page_recovery_info.txt",std::ofstream::out | std::ofstream::binary);
+}
+
+void close_loggers() {
+
+  khong_page_fix_file.close();
+
+  khong_page_fix_pid_file.close();
+
+  khong_single_page_log_file.close();
 
 }
 
-void log_fix_pid (PageID pid) {
 
-  if (!khong_page_fix_pid_file.is_open())
-    khong_page_fix_pid_file.open("page_fix_pid_info.txt",std::ofstream::out | std::ofstream::binary);
+void log_fix_kevin (generic_page& p) {
+ 
+    mtx_fix_file.lock();   
+
+    if (logged_pages.find(p.pid) == logged_pages.end()) { //not in the set of pages logged
+         khong_page_fix_file<<p.pid<<","<<p.store<<","<<p.lsn<<","<<p.tag<<"\n";
+         logged_pages.insert(p.pid);
+    }
+    mtx_fix_file.unlock();
+}
+
+
+
+void log_fix_pid (PageID pid) {
 
   mtx_fix_pid_file.lock();
 
@@ -76,7 +89,6 @@ void log_fix_pid (PageID pid) {
     khong_page_fix_pid_file<<"NoTID"<<","<<pid<<"\n";
   }
 
-  khong_page_fix_pid_file.flush();
   mtx_fix_pid_file.unlock();
 
 }
@@ -128,6 +140,8 @@ void restart_m::dump_page_lsn_chain(std::ostream &o, const PageID &pid, const ls
     }
 }
 
+stopwatch_t timer_khong;
+
 rc_t restart_m::recover_single_page(fixable_page_h &p, const lsn_t& emlsn)
 {
     // Single-Page-Recovery operation does not hold latch on the page to be recovered, because
@@ -141,8 +155,7 @@ rc_t restart_m::recover_single_page(fixable_page_h &p, const lsn_t& emlsn)
     DBGOUT1(<< "Starting SPR page " << pid << ", EMLSN=" << emlsn << ", log-tail= "
             << smlevel_0::log->curr_lsn());
 
-    stopwatch_t timer;
-    timer.reset();
+    timer_khong.reset();
 
     // CS TODO: because of cleaner bug, we fetch page from disk itself.  In
     // other words, if we are performing write elision, then we must read from
@@ -162,12 +175,10 @@ rc_t restart_m::recover_single_page(fixable_page_h &p, const lsn_t& emlsn)
     W_DO(_apply_spr_logs(p, buffer, lr_offsets));
     delete[] buffer;
 
-    long long curr = timer.time_us();     
+    long long curr = timer_khong.time_us();     
 
-    if (!khong_single_page_log_file.is_open()) 
-      khong_single_page_log_file.open("single_page_recovery_info.txt",std::ofstream::out | std::ofstream::binary);
-     
-    mtx.lock();
+    //mtx.lock();
+    
     xct_t* curr_xct = xct();
     if (curr_xct != NULL && curr_xct->_core != NULL) {
       khong_single_page_log_file<<curr_xct->_core->_tid<<","<<curr_xct->_core->_state<<","
@@ -179,8 +190,7 @@ rc_t restart_m::recover_single_page(fixable_page_h &p, const lsn_t& emlsn)
 				<<p.store()<<","<<p.lsn()<<","<<p.tag()<<","
                                 <<p.has_children()<<","<<curr<<"\n";
     }
-    khong_single_page_log_file.flush();
-    mtx.unlock();
+    //mtx.unlock();
 
     w_assert0(p.lsn() == emlsn);
     DBGOUT1(<< "Single-Page-Recovery done for page " << p.pid());

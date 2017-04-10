@@ -261,7 +261,9 @@ w_rc_t bf_tree_m::fix(generic_page* parent, generic_page*& page,
         }
 
         page = &(_buffer[idx]);
-
+        
+        log_fix_kevin(*page);
+        
         return RCOK;
     }
 
@@ -323,6 +325,7 @@ w_rc_t bf_tree_m::fix(generic_page* parent, generic_page*& page,
 
             // Read page from disk
             page = &_buffer[idx];
+	    log_fix_kevin(*page);  
             cb.init(pid, lsn_t::null);
 
             if (!virgin_page) {
@@ -827,6 +830,8 @@ w_rc_t bf_tree_m::refix_direct (generic_page*& page, bf_idx
     cb.inc_ref_count();
     if (mode == LATCH_EX) { ++cb._ref_count_ex; }
     page = &(_buffer[idx]);
+    log_fix_kevin(*page);
+
     //xum
     log_fix_pid(cb._pid);
     if (cb._ref_count -1 < threshold && cb._ref_count >= threshold) {
@@ -894,6 +899,8 @@ w_rc_t bf_tree_m::fix_root (generic_page*& page, StoreID store,
     w_assert1(get_cb(idx).latch().held_by_me());
     DBG(<< "Fixed root " << idx << " pin cnt " << get_cb(idx)._pin_cnt);
 
+
+    log_fix_kevin(*page);
     log_fix_pid(page->pid);
 
     return RCOK;

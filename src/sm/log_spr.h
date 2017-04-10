@@ -107,8 +107,12 @@ struct page_evict_t {
         : _child_lsn (child_lsn), _child_slot(child_slot) {}
 };
 
-void log_fix_kevin (fixable_page_h& p);
+void log_fix_kevin (generic_page& p);
 
 void log_fix_pid (PageID pid);
+
+void start_loggers();
+
+void close_loggers();
 
 #endif // SM_LOG_SPR_H
