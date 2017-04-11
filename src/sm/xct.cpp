@@ -33,6 +33,8 @@
 
 #include "allocator.h"
 
+#include "log_spr.h"
+
 const std::string xct_t::IMPL_NAME = "traditional";
 
 #define DBGX(arg) DBG(<<" th."<<me()->id << " " << "tid." << _tid  arg)
@@ -370,6 +372,8 @@ xct_t::xct_core::~xct_core()
 xct_t::~xct_t()
 {
     w_assert9(__stats == 0);
+   
+    xct_write_pages_used(this);
 
     if (!_sys_xct && smlevel_0::log) {
         smlevel_0::log->get_oldest_lsn_tracker()->leave(

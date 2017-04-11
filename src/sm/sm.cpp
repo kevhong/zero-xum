@@ -216,7 +216,7 @@ bool ss_m::shutdown()
         //                            and free memory.  No flush and no checkpoint
         
         _destruct_once();
-        close_loggers();
+        //close_loggers();
 	return true;
     }
     // If the store is not running currently, no-op

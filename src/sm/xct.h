@@ -86,6 +86,9 @@ Rome Research Laboratory Contract No. F30602-97-2-0247.
 
 #include "latch.h"
 
+#include <vector>
+
+
 class xct_dependent_t;
 struct okvl_mode;
 struct RawXct;
@@ -262,6 +265,7 @@ public:
     //xct_core* _core;
 
 public:
+    vector<PageID> pages_used; //pages used, added in order
     xct_core* _core;
     static const std::string IMPL_NAME;
 

@@ -115,4 +115,6 @@ void start_loggers();
 
 void close_loggers();
 
+void xct_write_pages_used(xct_t* curr_xct);
+
 #endif // SM_LOG_SPR_H

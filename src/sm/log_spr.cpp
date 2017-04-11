@@ -42,13 +42,15 @@ std::mutex mtx_fix_pid_file;
 
 std::set<int> logged_pages;
 
+std::mutex mtx_xct_write;
+
 void start_loggers() {
 
   if (!khong_page_fix_file.is_open())
     khong_page_fix_file.open("page_info.txt",std::ofstream::out | std::ofstream::binary);
 
   if (!khong_page_fix_pid_file.is_open())
-    khong_page_fix_pid_file.open("page_fix_info.txt",std::ofstream::out | std::ofstream::binary);
+    khong_page_fix_pid_file.open("xct_page_usge_info.txt",std::ofstream::out | std::ofstream::binary);
 
   if (!khong_single_page_log_file.is_open())
     khong_single_page_log_file.open("single_page_recovery_info.txt",std::ofstream::out | std::ofstream::binary);
@@ -77,22 +79,48 @@ void log_fix_kevin (generic_page& p) {
 }
 
 
+// need lock here to prevent strange race conditions
 
 void log_fix_pid (PageID pid) {
 
   mtx_fix_pid_file.lock();
 
   xct_t* curr_xct = xct();
-  if (curr_xct != NULL && curr_xct->_core != NULL) {
-    khong_page_fix_pid_file<<curr_xct->_core->_tid<<","<<curr_xct->_core->_state<<","<<pid<<"\n";
+  
+  //if (curr_xct != NULL && curr_xct->_core != NULL) {
+  //khong_page_fix_pid_file<<curr_xct->_core->_tid<<","<<curr_xct->_core->_state<<","<<pid<<"\n";
+  //}
+  //else {
+  //khong_page_fix_pid_file<<"NoTID"<<","<<pid<<"\n";
+  //}
+  
+  if (curr_xct != NULL) {
+    curr_xct->pages_used.push_back(pid);
   }
-  else {
-    khong_page_fix_pid_file<<"NoTID"<<","<<pid<<"\n";
-  }
-
+ 
   mtx_fix_pid_file.unlock();
 
 }
+
+void xct_write_pages_used(xct_t* curr_xct) {
+
+  mtx_xct_write.lock();
+
+  //  if (curr_xct != NULL) {
+    
+  khong_page_fix_pid_file <<curr_xct->_core->_tid;
+  
+  for (std::vector<PageID>::iterator it = curr_xct->pages_used.begin() ; 
+	it != curr_xct->pages_used.end(); it++)
+     khong_page_fix_pid_file << ',' << *it;
+   khong_page_fix_pid_file << '\n';
+  
+  //}
+
+  mtx_xct_write.unlock();
+
+}
+
 
 
 
