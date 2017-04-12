@@ -68,4 +68,19 @@ The 'zapps' target builds the execuatable we can use to run benchmarks on the sm
 
 # Guide on Running
 
+Added sm options
+
+("sm_xct_page_logging", po::value<bool>()->default_value(true),
+     "Enable/Disable logging of xct page access")
+("sm_single_page_logging", po::value<bool>()->default_value(true),
+   "Enable/Disable logging of single page access")
+
+("sm_startup_logging", po::value<bool>()->default_value(false),
+   "Enable/Disable logging of sm startup timestamps")
+
+("sm_recovery_logging", po::value<bool>()->default_value(true),
+   "Enable/Disable logging of recovery access")
+("sm_recovery_thread", po::value<bool>()->default_value(true),
+  "Enable/Disable background recovery of pages")
+
 (todo notes on running the executable)
