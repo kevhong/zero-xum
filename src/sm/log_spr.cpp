@@ -23,6 +23,7 @@
 #include <mutex>
 #include <set>
 
+#include "sm.h"
 
 std::mutex mtx;
 
@@ -44,37 +45,61 @@ std::set<int> logged_pages;
 
 std::mutex mtx_xct_write;
 
+bool log_page_access = false;
+
+bool log_single_page = false;
+
+void get_log_options() {
+
+  log_page_access  = ss_m::_options.get_bool_option("sm_xct_page_logging", true);
+
+  log_single_page = ss_m::_options.get_bool_option("sm_single_page_logging", true);
+
+}
+
 void start_loggers() {
 
-  if (!khong_page_fix_file.is_open())
-    khong_page_fix_file.open("page_info.txt",std::ofstream::out | std::ofstream::binary);
 
-  if (!khong_page_fix_pid_file.is_open())
-    khong_page_fix_pid_file.open("xct_page_usge_info.txt",std::ofstream::out | std::ofstream::binary);
+  if (log_page_access && !khong_page_fix_file.is_open())
+    khong_page_fix_file.open("page_info.txt", 
+			     std::ofstream::out | std::ofstream::binary | std::ios_base::trunc);
 
-  if (!khong_single_page_log_file.is_open())
-    khong_single_page_log_file.open("single_page_recovery_info.txt",std::ofstream::out | std::ofstream::binary);
+  if (log_page_access && !khong_page_fix_pid_file.is_open())
+    khong_page_fix_pid_file.open("xct_page_usage_info.txt", 
+				 std::ofstream::out | std::ofstream::binary | std::ios_base::trunc);
+
+  if (log_single_page && !khong_single_page_log_file.is_open())
+    khong_single_page_log_file.open("single_page_recovery_info.txt", 
+				    std::ofstream::out | std::ofstream::binary | std::ios_base::trunc);
 }
 
 void close_loggers() {
 
-  khong_page_fix_file.close();
+  if (log_page_access) {
+  
+    khong_page_fix_file.close();
 
-  khong_page_fix_pid_file.close();
+    khong_page_fix_pid_file.close();
+  }
 
   khong_single_page_log_file.close();
-
 }
 
 
 void log_fix_kevin (generic_page& p) {
- 
-    mtx_fix_file.lock();   
 
+  bool log_page_access  = ss_m::_options.get_bool_option("sm_xct_page_logging", true);
+ 
+    if (!log_page_access)
+      return;
+  
+    mtx_fix_file.lock();  
+   
     if (logged_pages.find(p.pid) == logged_pages.end()) { //not in the set of pages logged
          khong_page_fix_file<<p.pid<<","<<p.store<<","<<p.lsn<<","<<p.tag<<"\n";
          logged_pages.insert(p.pid);
     }
+
     mtx_fix_file.unlock();
 }
 
@@ -82,6 +107,9 @@ void log_fix_kevin (generic_page& p) {
 // need lock here to prevent strange race conditions
 
 void log_fix_pid (PageID pid) {
+
+  if (!log_page_access)
+    return;
 
   mtx_fix_pid_file.lock();
 
@@ -103,6 +131,9 @@ void log_fix_pid (PageID pid) {
 }
 
 void xct_write_pages_used(xct_t* curr_xct) {
+
+  if (!log_page_access)
+    return;
 
   mtx_xct_write.lock();
 
@@ -204,22 +235,27 @@ rc_t restart_m::recover_single_page(fixable_page_h &p, const lsn_t& emlsn)
     W_DO(_apply_spr_logs(p, buffer, lr_offsets));
     delete[] buffer;
 
-    long long curr = timer_khong.time_us();     
+    if (log_single_page)
+    {
+      long long curr = timer_khong.time_us();     
 
-    //mtx.lock();
+      mtx.lock();
     
-    xct_t* curr_xct = xct();
-    if (curr_xct != NULL && curr_xct->_core != NULL) {
-      khong_single_page_log_file<<curr_xct->_core->_tid<<","<<curr_xct->_core->_state<<","
-				<<pid<<","<<p.store()<<","<<p.lsn()<<","<<p.tag()<<","
-				<<p.has_children()<<","<<curr<<"\n";
+      xct_t* curr_xct = xct();
+      if (curr_xct != NULL && curr_xct->_core != NULL) {
+	khong_single_page_log_file<<curr_xct->_core->_tid<<","<<curr_xct->_core->_state<<","
+				  <<pid<<","<<p.store()<<","<<p.lsn()<<","<<p.tag()<<","
+				  <<p.has_children()<<","<<curr<<"\n";
+      }
+      else {
+	khong_single_page_log_file<<"NoTID"<<","<<pid<<","
+				  <<p.store()<<","<<p.lsn()<<","<<p.tag()<<","
+				  <<p.has_children()<<","<<curr<<"\n";
+      }
+
+      mtx.unlock();
+    
     }
-    else {
-      khong_single_page_log_file<<"NoTID"<<","<<pid<<","
-				<<p.store()<<","<<p.lsn()<<","<<p.tag()<<","
-                                <<p.has_children()<<","<<curr<<"\n";
-    }
-    //mtx.unlock();
 
     w_assert0(p.lsn() == emlsn);
     DBGOUT1(<< "Single-Page-Recovery done for page " << p.pid());

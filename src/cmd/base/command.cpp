@@ -330,7 +330,22 @@ void Command::setupSMOptions(po::options_description& options)
     ("sm_bufferpool_preload_threshold", po::value<int>()->default_value(100),
      "preload threshold")
     ("sm_archdir", po::value<string>()->default_value("archive"),
-        "Path to archive directory");
+        "Path to archive directory")
+
+    //khong logging options
+      ("sm_xct_page_logging", po::value<bool>()->default_value(true),
+       "Enable/Disable logging of xct page access")
+    ("sm_single_page_logging", po::value<bool>()->default_value(true),
+       "Enable/Disable logging of single page access")
+    
+    ("sm_startup_logging", po::value<bool>()->default_value(false),
+       "Enable/Disable logging of sm startup timestamps")
+
+    ("sm_recovery_logging", po::value<bool>()->default_value(true),
+       "Enable/Disable logging of recovery access")
+    ("sm_recovery_thread", po::value<bool>()->default_value(true),
+      "Enable/Disable background recovery of pages")
+    ;
     options.add(smoptions);
 }
 

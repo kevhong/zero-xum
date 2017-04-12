@@ -386,7 +386,9 @@ void restart_m::redo_page_pass()
     generic_page* page;
     stopwatch_t timer;
 
-    if (!khong_recovery_log_file.is_open())
+    bool log_this = ss_m::_options.get_bool_option("sm_recovery_logging", true);
+
+    if (log_this && !khong_recovery_log_file.is_open())
       khong_recovery_log_file.open("recovery_info.txt",std::ofstream::out | std::ofstream::binary);
 
     int count = 0;
@@ -395,7 +397,8 @@ void restart_m::redo_page_pass()
         PageID pid = iter->first;
         lsn_t lastLSN = iter->second.page_lsn;
 
-	khong_recovery_log_file<<pid<<","<<lastLSN<<"\n";
+        if (log_this)
+	  khong_recovery_log_file<<pid<<","<<lastLSN<<"\n";
 
         // simply fixing the page will take care of single-page recovery
         W_COERCE(smlevel_0::bf->fix_nonroot(
@@ -407,8 +410,10 @@ void restart_m::redo_page_pass()
 	count+=1;
     }
 
-    khong_recovery_log_file<<count<<"\n";
-    khong_recovery_log_file.close();
+    if (log_this) {
+      khong_recovery_log_file<<count<<"\n";
+      khong_recovery_log_file.close();
+    }
 
     ADD_TSTAT(restart_redo_time, timer.time_us());
     ERROUT(<< "Finished concurrent REDO of " << chkpt.buf_tab.size() << " pages");
