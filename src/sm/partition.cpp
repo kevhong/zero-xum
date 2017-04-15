@@ -68,6 +68,8 @@ Rome Research Laboratory Contract No. F30602-97-2-0247.
 
 // needed for skip_log
 #include "logdef_gen.cpp"
+#include <fcntl.h>
+
 
 partition_t::partition_t(log_storage *owner, partition_number_t num)
     : _num(num), _owner(owner), _size(-1),
@@ -313,7 +315,7 @@ rc_t partition_t::open_for_read()
     if(_fhdl_rd == invalid_fhdl) {
         string fname = _owner->make_log_name(_num);
         int fd, flags = smthread_t::OPEN_RDONLY;
-        W_DO(me()->open(fname.c_str(), flags, 0, fd));
+        W_DO(me()->open(fname.c_str(), flags|O_DIRECT, 0, fd));
 
         w_assert3(_fhdl_rd == invalid_fhdl);
         _fhdl_rd = fd;

@@ -86,6 +86,8 @@ Rome Research Laboratory Contract No. F30602-97-2-0247.
 
 #include "log_spr.h"
 
+#include "log_core.h"
+
 int khong_log_flag = 1;
 
 bool         smlevel_0::shutdown_clean = false;
@@ -188,6 +190,7 @@ bool ss_m::startup()
         start_loggers();
 
         _construct_once();
+	get_log_fetch_latency_options();
         return true;
     }
     // Store is already running, cannot have multiple instances running concurrently

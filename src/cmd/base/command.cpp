@@ -344,7 +344,13 @@ void Command::setupSMOptions(po::options_description& options)
     ("sm_recovery_logging", po::value<bool>()->default_value(true),
        "Enable/Disable logging of recovery access")
     ("sm_recovery_thread", po::value<bool>()->default_value(true),
-      "Enable/Disable background recovery of pages")
+       "Enable/Disable background recovery of pages")
+
+
+    ("sm_log_latency", po::value<bool>()->default_value(true),
+       "enable/disable log fetch latency")
+    ("sm_log_latency_usec", po::value<int>()->default_value(100),
+       "log_fetch_latency_usec")
     ;
     options.add(smoptions);
 }

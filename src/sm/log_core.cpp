@@ -86,6 +86,29 @@ Rome Research Laboratory Contract No. F30602-97-2-0247.
 
 typedef smlevel_0::fileoff_t fileoff_t;
 
+#include "sm.h"
+#include <unistd.h>
+
+
+bool log_fetch_latency = false;
+int log_fetch_latency_usec = 0;
+
+
+void get_log_fetch_latency_options() 
+{
+
+  log_fetch_latency = ss_m::_options.get_bool_option("sm_log_latency", false);
+  
+  log_fetch_latency_usec = ss_m::_options.get_int_option("sm_log_latency_usec", 40);
+
+}
+
+inline void log_fetch_delay() 
+{
+  if (log_fetch_latency)
+    usleep(log_fetch_latency_usec);
+
+}
 
 
 class ticker_thread_t : public smthread_t
@@ -227,6 +250,10 @@ log_core::fetch(lsn_t& ll, void* buf, lsn_t* nxt, const bool forward)
             return RCOK;
         }
     }
+   
+    //if (!smlevel_0::shutting_down)
+      //      log_fetch_delay();
+
 
     if (forward && ll >= durable_lsn()) {
         w_assert0(ll == durable_lsn());

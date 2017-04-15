@@ -341,4 +341,6 @@ log_i::get_last_rc()
 { return last_rc; }
 /*<std-footer incl-file-exclusion='LOG_H'>  -- do not edit anything below this line -- */
 
+void get_log_fetch_latency_options();
+
 #endif          /*</std-footer>*/
