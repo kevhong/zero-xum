@@ -150,7 +150,6 @@ smlevel_0::xct_impl_t smlevel_0::xct_impl
 int ss_m::_instance_cnt = 0;
 sm_options ss_m::_options;
 
-
 static queue_based_block_lock_t ssm_once_mutex;
 ss_m::ss_m(const sm_options &options)
 {

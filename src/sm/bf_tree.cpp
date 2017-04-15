@@ -237,8 +237,8 @@ w_rc_t bf_tree_m::fix(generic_page* parent, generic_page*& page,
                                    bool conditional, bool virgin_page, bool only_if_hit,
                                    lsn_t emlsn)
 {
-  
-    log_fix_pid(pid);
+
+    log_xct_page_access (pid);
 
     if (is_swizzled_pointer(pid)) {
         w_assert1(!virgin_page);
@@ -262,7 +262,8 @@ w_rc_t bf_tree_m::fix(generic_page* parent, generic_page*& page,
 
         page = &(_buffer[idx]);
         
-        log_fix_kevin(*page);
+    
+        log_page_info (*page);
         
         return RCOK;
     }
@@ -325,7 +326,7 @@ w_rc_t bf_tree_m::fix(generic_page* parent, generic_page*& page,
 
             // Read page from disk
             page = &_buffer[idx];
-	    log_fix_kevin(*page);  
+	    log_page_info (*page);  
             cb.init(pid, lsn_t::null);
 
             if (!virgin_page) {
@@ -360,7 +361,7 @@ w_rc_t bf_tree_m::fix(generic_page* parent, generic_page*& page,
             w_assert1(cb._pin_cnt > 0);
             DBG(<< "Fixed page " << pid << " (miss) to frame " << idx);
 
-	    log_fix_pid(pid);            
+	    log_xct_page_access (pid);            
 
             if (mode != LATCH_EX) {
                 w_assert1(mode == LATCH_SH);
@@ -830,10 +831,11 @@ w_rc_t bf_tree_m::refix_direct (generic_page*& page, bf_idx
     cb.inc_ref_count();
     if (mode == LATCH_EX) { ++cb._ref_count_ex; }
     page = &(_buffer[idx]);
-    log_fix_kevin(*page);
+
+    log_page_info (*page);
 
     //xum
-    log_fix_pid(cb._pid);
+    log_xct_page_access (cb._pid);
     if (cb._ref_count -1 < threshold && cb._ref_count >= threshold) {
 	// New hot page
 	if (hp_file.is_open()) {
@@ -900,8 +902,8 @@ w_rc_t bf_tree_m::fix_root (generic_page*& page, StoreID store,
     DBG(<< "Fixed root " << idx << " pin cnt " << get_cb(idx)._pin_cnt);
 
 
-    log_fix_kevin(*page);
-    log_fix_pid(page->pid);
+    log_page_info (*page);
+    log_xct_page_access (page->pid);
 
     return RCOK;
 }

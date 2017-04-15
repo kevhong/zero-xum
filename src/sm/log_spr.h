@@ -107,16 +107,16 @@ struct page_evict_t {
         : _child_lsn (child_lsn), _child_slot(child_slot) {}
 };
 
-void log_fix_kevin (generic_page& p);
+void log_page_info (generic_page& p);
 
-void log_fix_pid (PageID pid);
+void log_xct_page_access (PageID pid);
 
-void start_loggers();
+void start_loggers ();
 
-void close_loggers();
+void close_loggers ();
 
 void xct_write_pages_used(xct_t* curr_xct);
 
-void get_log_options();
+void get_log_options ();
 
 #endif // SM_LOG_SPR_H

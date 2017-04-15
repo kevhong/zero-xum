@@ -25,25 +25,21 @@
 
 #include "sm.h"
 
-std::mutex mtx;
-
 ofstream khong_single_page_log_file;
 
-//ofstream khong_page_access_file;
+ofstream khong_xct_page_access_file;
 
-ofstream khong_page_fix_pid_file;
+ofstream khong_page_info_file;
 
-ofstream khong_page_fix_file;
+std::mutex mtx_xct_page_access;
 
-std::mutex mtx_fix_file;
-
-std::mutex mtx_fix_pid_file;
-
-//std::mutex mtx_access_file;
+std::mutex mtx_page_info;
 
 std::set<int> logged_pages;
 
 std::mutex mtx_xct_write;
+
+std::mutex mtx_single_page;
 
 bool log_page_access = false;
 
@@ -60,12 +56,12 @@ void get_log_options() {
 void start_loggers() {
 
 
-  if (log_page_access && !khong_page_fix_file.is_open())
-    khong_page_fix_file.open("page_info.txt", 
+  if (log_page_access && !khong_page_info_file.is_open())
+    khong_page_info_file.open("page_info.txt", 
 			     std::ofstream::out | std::ofstream::binary | std::ios_base::trunc);
 
-  if (log_page_access && !khong_page_fix_pid_file.is_open())
-    khong_page_fix_pid_file.open("xct_page_usage_info.txt", 
+  if (log_page_access && !khong_xct_page_access_file.is_open())
+    khong_xct_page_access_file.open("xct_page_usage_info.txt", 
 				 std::ofstream::out | std::ofstream::binary | std::ios_base::trunc);
 
   if (log_single_page && !khong_single_page_log_file.is_open())
@@ -77,41 +73,39 @@ void close_loggers() {
 
   if (log_page_access) {
   
-    khong_page_fix_file.close();
+    khong_page_info_file.close();
 
-    khong_page_fix_pid_file.close();
+    khong_xct_page_access_file.close();
   }
 
   khong_single_page_log_file.close();
 }
 
 
-void log_fix_kevin (generic_page& p) {
+void log_page_info (generic_page& p) {
 
-  bool log_page_access  = ss_m::_options.get_bool_option("sm_xct_page_logging", true);
- 
     if (!log_page_access)
       return;
-  
-    mtx_fix_file.lock();  
+
+    mtx_page_info.lock();  
    
     if (logged_pages.find(p.pid) == logged_pages.end()) { //not in the set of pages logged
-         khong_page_fix_file<<p.pid<<","<<p.store<<","<<p.lsn<<","<<p.tag<<"\n";
+         khong_page_info_file<<p.pid<<","<<p.store<<","<<p.lsn<<","<<p.tag<<"\n";
          logged_pages.insert(p.pid);
     }
 
-    mtx_fix_file.unlock();
+    mtx_page_info.unlock();
 }
 
 
 // need lock here to prevent strange race conditions
 
-void log_fix_pid (PageID pid) {
-
+void log_xct_page_access (PageID pid) {
+  
   if (!log_page_access)
     return;
 
-  mtx_fix_pid_file.lock();
+  mtx_xct_page_access.lock();
 
   xct_t* curr_xct = xct();
   
@@ -126,11 +120,11 @@ void log_fix_pid (PageID pid) {
     curr_xct->pages_used.push_back(pid);
   }
  
-  mtx_fix_pid_file.unlock();
+  mtx_xct_page_access.unlock();
 
 }
 
-void xct_write_pages_used(xct_t* curr_xct) {
+void xct_write_pages_used (xct_t* curr_xct) {
 
   if (!log_page_access)
     return;
@@ -139,12 +133,12 @@ void xct_write_pages_used(xct_t* curr_xct) {
 
   //  if (curr_xct != NULL) {
     
-  khong_page_fix_pid_file <<curr_xct->_core->_tid;
+  khong_xct_page_access_file <<curr_xct->_core->_tid;
   
   for (std::vector<PageID>::iterator it = curr_xct->pages_used.begin() ; 
 	it != curr_xct->pages_used.end(); it++)
-     khong_page_fix_pid_file << ',' << *it;
-   khong_page_fix_pid_file << '\n';
+     khong_xct_page_access_file << ',' << *it;
+   khong_xct_page_access_file << '\n';
   
   //}
 
@@ -239,7 +233,7 @@ rc_t restart_m::recover_single_page(fixable_page_h &p, const lsn_t& emlsn)
     {
       long long curr = timer_khong.time_us();     
 
-      mtx.lock();
+      mtx_single_page.lock();
     
       xct_t* curr_xct = xct();
       if (curr_xct != NULL && curr_xct->_core != NULL) {
@@ -253,7 +247,7 @@ rc_t restart_m::recover_single_page(fixable_page_h &p, const lsn_t& emlsn)
 				  <<p.has_children()<<","<<curr<<"\n";
       }
 
-      mtx.unlock();
+      mtx_single_page.unlock();
     
     }
 
