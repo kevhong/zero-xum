@@ -1,3 +1,4 @@
+
 /*
  * (c) Copyright 2011-2013, Hewlett-Packard Development Company, LP
  */
@@ -315,7 +316,7 @@ rc_t partition_t::open_for_read()
     if(_fhdl_rd == invalid_fhdl) {
         string fname = _owner->make_log_name(_num);
         int fd, flags = smthread_t::OPEN_RDONLY;
-        W_DO(me()->open(fname.c_str(), flags|O_DIRECT, 0, fd));
+        W_DO(me()->open(fname.c_str(), flags |= O_DIRECT, 0, fd));
 
         w_assert3(_fhdl_rd == invalid_fhdl);
         _fhdl_rd = fd;

@@ -99,7 +99,7 @@ void get_log_fetch_latency_options()
 
   log_fetch_latency = ss_m::_options.get_bool_option("sm_log_latency", false);
   
-  log_fetch_latency_usec = ss_m::_options.get_int_option("sm_log_latency_usec", 40);
+  log_fetch_latency_usec = ss_m::_options.get_int_option("sm_log_latency_usec", 30);
 
 }
 
@@ -251,8 +251,8 @@ log_core::fetch(lsn_t& ll, void* buf, lsn_t* nxt, const bool forward)
         }
     }
    
-    //if (!smlevel_0::shutting_down)
-      //      log_fetch_delay();
+    if (!smlevel_0::shutting_down)
+      log_fetch_delay();
 
 
     if (forward && ll >= durable_lsn()) {
