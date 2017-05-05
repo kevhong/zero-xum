@@ -12,6 +12,7 @@
 #include "restart.h"
 #include "log_spr.h"
 #include "logrec.h"
+#include "latch.h"
 
 #include "generic_page.h"
 #include "fixable_page_h.h"
@@ -35,7 +36,7 @@ std::mutex mtx_xct_page_access;
 
 std::mutex mtx_page_info;
 
-std::set<int> logged_pages;
+std::set<PageID> logged_pages;
 
 std::mutex mtx_xct_write;
 
@@ -100,7 +101,7 @@ void log_page_info (generic_page& p) {
 
 // need lock here to prevent strange race conditions
 
-void log_xct_page_access (PageID pid) {
+void log_xct_page_access (PageID pid, latch_mode_t mode) {
   
   if (!log_page_access)
     return;
@@ -117,6 +118,7 @@ void log_xct_page_access (PageID pid) {
   //}
   
   if (curr_xct != NULL) {
+    curr_xct->latch_modes.push_back(mode);
     curr_xct->pages_used.push_back(pid);
   }
  
@@ -135,10 +137,14 @@ void xct_write_pages_used (xct_t* curr_xct) {
     
   khong_xct_page_access_file <<curr_xct->_core->_tid;
   
-  for (std::vector<PageID>::iterator it = curr_xct->pages_used.begin() ; 
-	it != curr_xct->pages_used.end(); it++)
-     khong_xct_page_access_file << ',' << *it;
-   khong_xct_page_access_file << '\n';
+  std::vector<PageID>::iterator it = curr_xct->pages_used.begin();
+  std::vector<latch_mode_t>::iterator it2 = curr_xct->latch_modes.begin();
+
+  for (; 
+       it != curr_xct->pages_used.end() && it2 != curr_xct->latch_modes.end(); it++, it2++)
+    khong_xct_page_access_file << ',' << *it<<'-'<<*it2;
+   
+  khong_xct_page_access_file << '\n';
   
   //}
 

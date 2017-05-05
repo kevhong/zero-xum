@@ -238,7 +238,7 @@ w_rc_t bf_tree_m::fix(generic_page* parent, generic_page*& page,
                                    lsn_t emlsn)
 {
 
-    log_xct_page_access (pid);
+  log_xct_page_access (pid, mode);
 
     if (is_swizzled_pointer(pid)) {
         w_assert1(!virgin_page);
@@ -361,7 +361,7 @@ w_rc_t bf_tree_m::fix(generic_page* parent, generic_page*& page,
             w_assert1(cb._pin_cnt > 0);
             DBG(<< "Fixed page " << pid << " (miss) to frame " << idx);
 
-	    log_xct_page_access (pid);            
+	    //log_xct_page_access (pid);            
 
             if (mode != LATCH_EX) {
                 w_assert1(mode == LATCH_SH);
@@ -835,7 +835,7 @@ w_rc_t bf_tree_m::refix_direct (generic_page*& page, bf_idx
     log_page_info (*page);
 
     //xum
-    log_xct_page_access (cb._pid);
+    log_xct_page_access (cb._pid, mode);
     if (cb._ref_count -1 < threshold && cb._ref_count >= threshold) {
 	// New hot page
 	if (hp_file.is_open()) {
@@ -903,7 +903,7 @@ w_rc_t bf_tree_m::fix_root (generic_page*& page, StoreID store,
 
 
     log_page_info (*page);
-    log_xct_page_access (page->pid);
+    log_xct_page_access (page->pid, mode);
 
     return RCOK;
 }

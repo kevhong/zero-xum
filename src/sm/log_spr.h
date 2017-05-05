@@ -5,6 +5,7 @@
  */
 #include "basics.h"
 #include "lsn.h"
+#include "latch.h"
 
 /**
  * \defgroup Single-Page-Recovery
@@ -109,7 +110,7 @@ struct page_evict_t {
 
 void log_page_info (generic_page& p);
 
-void log_xct_page_access (PageID pid);
+void log_xct_page_access (PageID pid, latch_mode_t mode);
 
 void start_loggers ();
 

@@ -266,6 +266,7 @@ public:
 
 public:
     vector<PageID> pages_used; //pages used, added in order
+    vector<latch_mode_t> latch_modes;
     xct_core* _core;
     static const std::string IMPL_NAME;
 
