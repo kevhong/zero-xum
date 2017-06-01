@@ -83,4 +83,15 @@ Added sm options
 ("sm_recovery_thread", po::value<bool>()->default_value(true),
   "Enable/Disable background recovery of pages")
 
-(todo notes on running the executable)
+
+in the src/
+
+bf_tree.cpp : adding logging code
+
+log_spr.cpp : single page recovery function (recover single page) and loggers
+
+restore.cpp : the restart functions
+
+xct.cpp : the transactions
+
+TPC-C : is under kits
